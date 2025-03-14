@@ -72,11 +72,11 @@ app.post('/users/:username/pictures', auth, upload.array('pictures'), (req, res)
     }
 
     req.files.forEach(file => {
-        const destPath = path.join(userDir, file.filename);
+        const destPath = path.join(userDir, file.originalname);
         fs.renameSync(file.path, destPath);
     });
 
-    res.json({ success: true, files: req.files.map(file => file.filename) });
+    res.json({ success: true, files: req.files.map(file => file.originalname) });
 });
 
 app.delete('/users/:username/pictures', auth, (req, res) => {
