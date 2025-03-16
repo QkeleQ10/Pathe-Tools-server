@@ -10,7 +10,7 @@ import ngrok from '@ngrok/ngrok';
 
 dotenv.config();
 
-const port = 3000;
+const port = 3541;
 
 (async function () {
     // Establish connectivity
