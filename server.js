@@ -6,8 +6,21 @@ import dotenv from 'dotenv';
 import os from 'os';
 import multer from 'multer';
 import path from 'path';
+import ngrok from '@ngrok/ngrok';
 
 dotenv.config();
+
+const port = 3000;
+
+(async function () {
+    // Establish connectivity
+    const listener = await ngrok.forward({ addr: port, authtoken_from_env: true });
+
+    // Output ngrok url to console
+    console.log(`Ingress established at: ${listener.url()}`);
+})();
+
+process.stdin.resume();
 
 const app = express();
 const DATA_FILE = 'data.json';
@@ -109,7 +122,6 @@ function getLocalIp() {
     return 'localhost';
 }
 
-const port = 3000;
 app.listen(port, () => {
     const localIp = getLocalIp();
     console.log(`Server running on port ${port} (http://${localIp}:${port})`);
