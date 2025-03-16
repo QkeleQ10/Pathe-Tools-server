@@ -14,7 +14,7 @@ const port = 3000;
 
 (async function () {
     // Establish connectivity
-    const listener = await ngrok.forward({ addr: port, authtoken_from_env: true });
+    const listener = await ngrok.forward({ addr: port, authtoken_from_env: true, domain: process.env.NGROK_DOMAIN, request_header_add: {} });
 
     // Output ngrok url to console
     console.log(`Ingress established at: ${listener.url()}`);
