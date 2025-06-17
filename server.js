@@ -52,16 +52,6 @@ app.get('/users/:username/pictures', (req, res) => {
     res.json(files);
 });
 
-app.get('/users/:username/pictures/:filename', (req, res) => {
-    const { username, filename } = req.params;
-    const filePath = path.join('uploads', username, filename);
-    if (fs.existsSync(filePath)) {
-        res.sendFile(path.resolve(filePath));
-    } else {
-        res.status(404).json({ error: 'Not found' });
-    }
-});
-
 app.post('/users/:username/pictures', auth, upload.array('pictures'), (req, res) => {
     const { username } = req.params;
     if (username !== req.auth.user) {
@@ -96,6 +86,31 @@ app.delete('/users/:username/pictures', auth, (req, res) => {
     }
 
     res.json({ success: true });
+});
+
+app.get('/users/:username/pictures/:filename', (req, res) => {
+    const { username, filename } = req.params;
+    const filePath = path.join('uploads', username, filename);
+    if (fs.existsSync(filePath)) {
+        res.sendFile(path.resolve(filePath));
+    } else {
+        res.status(404).json({ error: 'Not found' });
+    }
+});
+
+app.delete('/users/:username/pictures/:filename', auth, (req, res) => {
+    const { username, filename } = req.params;
+    if (username !== req.auth.user) {
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const filePath = path.join('uploads', username, filename);
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: 'Not found' });
+    }
 });
 
 function getLocalIp() {
