@@ -124,6 +124,54 @@ app.delete('/users/:username/pictures/:filename', auth, (req, res) => {
     }
 });
 
+// Global credits stingers endpoints
+app.get('/global/creditsstingers', (req, res) => {
+    res.json(storage.global?.creditsstingers || []);
+});
+
+app.post('/global/creditsstingers', auth, (req, res) => {
+    const { title } = req.body;
+    
+    if (!title || typeof title !== 'string') {
+        return res.status(400).json({ error: 'Invalid title value' });
+    }
+
+    storage.global ||= {};
+    storage.global.creditsstingers ||= [];
+    
+    // Add the new entry
+    storage.global.creditsstingers.push(title);
+
+    // Keep only the newest 50 items
+    if (storage.global.creditsstingers.length > 50) {
+        storage.global.creditsstingers = storage.global.creditsstingers.slice(-50);
+    }
+    
+    fs.writeFileSync(DATA_FILE, JSON.stringify(storage, null, 2));
+    res.json({ success: true, creditsstingers: storage.global.creditsstingers });
+});
+
+app.delete('/global/creditsstingers', auth, (req, res) => {
+    const { title } = req.body;
+    
+    if (!title || typeof title !== 'string') {
+        return res.status(400).json({ error: 'Invalid title value' });
+    }
+
+    storage.global ||= {};
+    storage.global.creditsstingers ||= [];
+    
+    const index = storage.global.creditsstingers.indexOf(title);
+    if (index === -1) {
+        return res.status(404).json({ error: 'title not found' });
+    }
+    
+    storage.global.creditsstingers.splice(index, 1);
+    
+    fs.writeFileSync(DATA_FILE, JSON.stringify(storage, null, 2));
+    res.json({ success: true, creditsstingers: storage.global.creditsstingers });
+});
+
 function getLocalIp() {
     const interfaces = os.networkInterfaces();
     // console.log(interfaces);
