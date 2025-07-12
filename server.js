@@ -6,10 +6,21 @@ import dotenv from 'dotenv';
 import os from 'os';
 import multer from 'multer';
 import path from 'path';
+import ngrok from '@ngrok/ngrok';
 
 dotenv.config();
 
 const port = 3541;
+
+(async function () {
+    // Establish connectivity
+    const listener = await ngrok.forward({ addr: port, authtoken_from_env: true, domain: process.env.NGROK_DOMAIN });
+
+    // Output ngrok url to console
+    console.log(`Ingress established at: ${listener.url()}`);
+})();
+
+process.stdin.resume();
 
 const app = express();
 const DATA_FILE = 'data.json';
