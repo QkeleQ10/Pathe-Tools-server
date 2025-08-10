@@ -172,6 +172,46 @@ app.delete('/global/creditsstingers', auth, (req, res) => {
     res.json({ success: true, creditsstingers: storage.global.creditsstingers });
 });
 
+// OMDb API endpoint
+app.get('/omdb', async (req, res) => {
+    const { t: title, y: year } = req.query;
+    
+    if (!title) {
+        return res.status(400).json({ error: 'Title parameter (t) is required' });
+    }
+
+    const apiKey = process.env.OMDB_APIKEY;
+    if (!apiKey) {
+        return res.status(500).json({ error: 'OMDb API key not configured' });
+    }
+
+    const currentYear = new Date().getFullYear();
+    const searchYear = year || currentYear;
+
+    try {
+        // First try with year (either provided or current year)
+        let url = `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&y=${searchYear}&apikey=${apiKey}`;
+        let response = await fetch(url);
+        let data = await response.json();
+
+        // If not found and we used a year, try without year
+        if (data.Response === 'False' && data.Error === 'Movie not found!' && (year || currentYear)) {
+            url = `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${apiKey}`;
+            response = await fetch(url);
+            data = await response.json();
+        }
+
+        if (data.Response === 'False') {
+            return res.status(404).json({ error: data.Error || 'Movie not found' });
+        }
+
+        res.json(data);
+    } catch (error) {
+        console.error('OMDb API error:', error);
+        res.status(500).json({ error: 'Failed to fetch movie information' });
+    }
+});
+
 function getLocalIp() {
     const interfaces = os.networkInterfaces();
     // console.log(interfaces);
