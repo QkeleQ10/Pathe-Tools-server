@@ -190,13 +190,13 @@ app.get('/omdb', async (req, res) => {
 
     try {
         // First try with year (either provided or current year)
-        let url = `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&y=${searchYear}&apikey=${apiKey}`;
+        let url = `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&y=${searchYear}&plot=full&apikey=${apiKey}`;
         let response = await fetch(url);
         let data = await response.json();
 
         // If not found and we used a year, try without year
         if (data.Response === 'False' && data.Error === 'Movie not found!' && (year || currentYear)) {
-            url = `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${apiKey}`;
+            url = `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&plot=full&apikey=${apiKey}`;
             response = await fetch(url);
             data = await response.json();
         }
