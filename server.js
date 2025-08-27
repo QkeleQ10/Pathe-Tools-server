@@ -131,14 +131,14 @@ app.get('/global/creditsstingers', (req, res) => {
 
 app.post('/global/creditsstingers', auth, (req, res) => {
     const { title } = req.body;
-    
+
     if (!title || typeof title !== 'string') {
         return res.status(400).json({ error: 'Invalid title value' });
     }
 
     storage.global ||= {};
     storage.global.creditsstingers ||= [];
-    
+
     // Add the new entry
     storage.global.creditsstingers.push(title);
 
@@ -146,28 +146,28 @@ app.post('/global/creditsstingers', auth, (req, res) => {
     if (storage.global.creditsstingers.length > 50) {
         storage.global.creditsstingers = storage.global.creditsstingers.slice(-50);
     }
-    
+
     fs.writeFileSync(DATA_FILE, JSON.stringify(storage, null, 2));
     res.json({ success: true, creditsstingers: storage.global.creditsstingers });
 });
 
 app.delete('/global/creditsstingers', auth, (req, res) => {
     const { title } = req.body;
-    
+
     if (!title || typeof title !== 'string') {
         return res.status(400).json({ error: 'Invalid title value' });
     }
 
     storage.global ||= {};
     storage.global.creditsstingers ||= [];
-    
+
     const index = storage.global.creditsstingers.indexOf(title);
     if (index === -1) {
         return res.status(404).json({ error: 'title not found' });
     }
-    
+
     storage.global.creditsstingers.splice(index, 1);
-    
+
     fs.writeFileSync(DATA_FILE, JSON.stringify(storage, null, 2));
     res.json({ success: true, creditsstingers: storage.global.creditsstingers });
 });
@@ -175,7 +175,7 @@ app.delete('/global/creditsstingers', auth, (req, res) => {
 // OMDb API endpoint
 app.get('/omdb', async (req, res) => {
     const { t: title, y: year } = req.query;
-    
+
     if (!title) {
         return res.status(400).json({ error: 'Title parameter (t) is required' });
     }
@@ -209,6 +209,19 @@ app.get('/omdb', async (req, res) => {
     } catch (error) {
         console.error('OMDb API error:', error);
         res.status(500).json({ error: 'Failed to fetch movie information' });
+    }
+});
+
+app.get('/pathe-api', async (req, res) => {
+    const { endpoint } = req.query;
+
+    try {
+        const response = await fetch(`https://www.pathe.nl/api/${endpoint || 'shows'}?language=nl`);
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching from Pathé API:', error);
+        res.status(500).json({ error: 'Failed to fetch from Pathé API' });
     }
 });
 
