@@ -7,6 +7,7 @@ import os from 'os';
 import multer from 'multer';
 import path from 'path';
 import ngrok from '@ngrok/ngrok';
+import ical from "ical-generator";
 
 dotenv.config();
 
@@ -51,6 +52,24 @@ app.post('/users/:username/timetable', auth, (req, res) => {
     storage[username].timetable = req.body;
     fs.writeFileSync(DATA_FILE, JSON.stringify(storage, null, 2));
     res.json({ success: true });
+});
+
+app.get('/users/:username/timetable/credits.ics', (req, res) => {
+    const { username } = req.params;
+
+    const cal = ical({ name: `Uitlopen ${username}` });
+
+    (storage[username]?.timetable?.timetable || []).forEach(show => cal.createEvent({
+        start: new Date(show.creditsTime),
+        end: new Date(show.creditsTime),
+        summary: `${show.auditorium.replace(/^\w+\s/, '')} - ${show.playlist}`,
+        description: show.feature,
+        location: show.auditorium,
+    }));
+
+    res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+    res.setHeader("Content-Disposition", "attachment; filename=credits.ics");
+    res.send(cal.toString());
 });
 
 app.get('/users/:username/pictures', (req, res) => {
