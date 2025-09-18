@@ -71,11 +71,11 @@ app.get('/users/:username/timetable/credits.ics', (req, res) => {
             location: show.auditorium,
         });
 
-        event.createAlarm({
-            type: "display", // "display" = popup notification, "audio" = sound
-            trigger: -60,    // seconds before start (negative = before event)
-            description: event.title,
-        });
+        // event.createAlarm({
+        //     type: "display",
+        //     trigger: -60,
+        //     description: event.title,
+        // });
 
     });
 
