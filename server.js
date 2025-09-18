@@ -57,15 +57,27 @@ app.post('/users/:username/timetable', auth, (req, res) => {
 app.get('/users/:username/timetable/credits.ics', (req, res) => {
     const { username } = req.params;
 
-    const cal = ical({ name: `Uitlopen ${username}` });
+    const cal = ical({
+        name: `Uitlopen ${username}`,
+        timezone: 'Europe/Amsterdam'
+    });
 
-    (storage[username]?.timetable?.timetable || []).forEach(show => cal.createEvent({
-        start: new Date(show.creditsTime),
-        end: new Date(show.creditsTime),
-        summary: `${show.auditorium.replace(/^\w+\s/, '')} - ${show.playlist}`,
-        description: show.feature,
-        location: show.auditorium,
-    }));
+    (storage[username]?.timetable?.timetable || []).forEach(show => {
+        const event = cal.createEvent({
+            start: new Date(show.creditsTime),
+            end: new Date(show.creditsTime),
+            summary: `${show.auditorium.replace(/^\w+\s/, '')} - ${show.playlist}`,
+            description: show.feature,
+            location: show.auditorium,
+        });
+
+        event.createAlarm({
+            type: "display", // "display" = popup notification, "audio" = sound
+            trigger: -60,    // seconds before start (negative = before event)
+            description: event.title,
+        });
+
+    });
 
     res.setHeader("Content-Type", "text/calendar; charset=utf-8");
     res.setHeader("Content-Disposition", "attachment; filename=credits.ics");
