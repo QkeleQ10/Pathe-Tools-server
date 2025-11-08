@@ -7,13 +7,15 @@ import os from 'os';
 import multer from 'multer';
 import path from 'path';
 import ngrok from '@ngrok/ngrok';
-import ical from "ical-generator";
+import IcalGenerator from "ical-generator";
+import IcalExpander from 'ical-expander';
 
 dotenv.config();
 
 const port = 3541;
 
 (async function () {
+    if (!process.env.NGROK_DOMAIN) return;
     // Establish connectivity
     const listener = await ngrok.forward({ addr: port, authtoken_from_env: true, domain: process.env.NGROK_DOMAIN });
 
@@ -54,15 +56,45 @@ app.post('/users/:username/timetable', auth, (req, res) => {
     res.json({ success: true });
 });
 
-app.get('/users/:username/timetable/credits.ics', (req, res) => {
+app.get('/users/:username/timetable/credits.ics', async (req, res) => {
     const { username } = req.params;
+    const { shiftsUrl, shiftsFilter, alarm } = req.query;
 
-    const cal = ical({
-        name: `Uitlopen ${username}`,
+    let shows = storage[username]?.timetable?.timetable || [];
+
+    if (shiftsUrl) {
+        const icalExpander = new IcalExpander({ ics: await (await fetch(shiftsUrl)).text() })
+        const rawShifts = icalExpander.all().events || [];
+
+        let shifts = rawShifts.map(ev => {
+            const startDate = ev.startDate?.toJSDate ? ev.startDate.toJSDate() : new Date(ev.startDate);
+            const endDate = ev.endDate?.toJSDate ? ev.endDate.toJSDate() : new Date(ev.endDate);
+            const summary = ev.summary || ev.component?.summary || (ev.component && ev.component.summary) || '';
+            return { startDate, endDate, summary };
+        });
+
+        if (shiftsFilter)
+            shifts = shifts.filter(s => shiftsFilter.split(',').includes(s.summary));
+
+        shows = shows.filter(show => {
+            const showTime = new Date(show.creditsTime);
+            return shifts.some(shift => {
+                const shiftStart = new Date(shift.startDate);
+                const shiftEnd = new Date(shift.endDate);
+                const bufferMs = 15 * 60 * 1000;
+                const windowStart = new Date(shiftStart.getTime() - bufferMs);
+                const windowEnd = new Date(shiftEnd.getTime() + bufferMs);
+                return showTime >= windowStart && showTime <= windowEnd;
+            });
+        })
+    }
+
+    const cal = IcalGenerator({
+        name: shiftsUrl ? `Uitlopen ${username} (gefilterd)` : `Uitlopen ${username}`,
         timezone: 'Europe/Amsterdam'
     });
 
-    (storage[username]?.timetable?.timetable || []).forEach(show => {
+    shows.forEach(show => {
         const event = cal.createEvent({
             start: new Date(show.creditsTime),
             end: new Date(show.creditsTime),
@@ -71,12 +103,12 @@ app.get('/users/:username/timetable/credits.ics', (req, res) => {
             location: show.auditorium,
         });
 
-        // event.createAlarm({
-        //     type: "display",
-        //     trigger: -60,
-        //     description: event.title,
-        // });
-
+        if (alarm === 'true')
+            event.createAlarm({
+                type: "display",
+                trigger: -60,
+                description: event.title,
+            });
     });
 
     res.setHeader("Content-Type", "text/calendar; charset=utf-8");
