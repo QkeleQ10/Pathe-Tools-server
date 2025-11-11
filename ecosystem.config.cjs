@@ -6,8 +6,8 @@ module.exports = {
             env: { NODE_ENV: 'production' }
         },
         {
-            name: 'pathe-tools-server-update',
-            script: 'update.bat',
+            name: 'pathe-tools-server-updater',
+            script: 'updater.bat',
             interpreter: "none",
             autorestart: false,
             watch: false,
