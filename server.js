@@ -31,20 +31,9 @@ const DATA_FILE = 'data.json';
 const storage = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : {};
 const upload = multer({ dest: 'uploads/' });
 
-const requestMeter = io.meter({
-    name: 'Requests/hour',
-    type: 'meter',
-    timeframe: 60 * 60
-});
-
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors({ origin: '*' }));
-
-app.use((req, res, next) => {
-    requestMeter.mark();
-    next();
-});
 
 const auth = basicAuth({
     users: JSON.parse(process.env.USERS || '{}'),
