@@ -1,9 +1,0 @@
-echo Fetching latest code...
-git fetch --all
-git reset --hard origin/main
-
-echo Installing dependencies...
-npm install --omit=dev
-
-echo Restarting app...
-pm2 restart pathe-tools-server
