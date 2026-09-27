@@ -29,10 +29,11 @@ const slidesDir = 'C:\\Slides';
 app.get('/slides', (req, res) => {
     try {
         const files = fs.readdirSync(slidesDir);
-        const imageFiles = files.filter(file => {
-            const ext = path.extname(file).toLowerCase();
-            return ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'].includes(ext);
-        });
+        const imageFiles = files
+        // .filter(file => {
+        //     const ext = path.extname(file).toLowerCase();
+        //     return ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'].includes(ext);
+        // });
         res.json(imageFiles);
     } catch (error) {
         console.error('Error reading slides directory:', error);
