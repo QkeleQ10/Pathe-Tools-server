@@ -24,16 +24,22 @@ app.get('/proxy', async (req, res) => {
     }
 });
 
-const slidesDir = 'C:\\Slides';
+const mediaDir = 'C:\\Slides';
 
-app.get('/slides', (req, res) => {
+app.get('/media/:type', (req, res) => {
     try {
-        const files = fs.readdirSync(slidesDir);
+        const type = req.params.type; // 'all', 'images' or 'videos'
+        const files = fs.readdirSync(mediaDir);
         const imageFiles = files
-        // .filter(file => {
-        //     const ext = path.extname(file).toLowerCase();
-        //     return ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'].includes(ext);
-        // });
+            .filter(file => {
+                const ext = path.extname(file).toLowerCase();
+                if (type === 'videos')
+                    return ['.mp4', '.webm', '.ogg', '.mov', '.mkv', '.avi', '.wmv'].includes(ext);
+                else if (type === 'images')
+                    return ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'].includes(ext);
+                else
+                    return true;
+            });
         res.json(imageFiles);
     } catch (error) {
         console.error('Error reading slides directory:', error);
@@ -41,15 +47,15 @@ app.get('/slides', (req, res) => {
     }
 });
 
-app.get('/slides/:filename', (req, res) => {
+app.get('/media/file/:filename', (req, res) => {
     try {
         const filename = req.params.filename;
-        const filePath = path.join(slidesDir, filename);
-        
+        const filePath = path.join(mediaDir, filename);
+
         if (!fs.existsSync(filePath)) {
             return res.status(404).json({ error: 'File not found' });
         }
-        
+
         res.sendFile(filePath);
     } catch (error) {
         console.error('Error serving slide:', error);
